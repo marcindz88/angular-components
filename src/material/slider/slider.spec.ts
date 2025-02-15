@@ -1119,9 +1119,11 @@ describe('MatSlider', () => {
   describe('slider with direction', () => {
     let slider: MatSlider;
     let input: MatSliderThumb;
+    let sliderEl: HTMLElement;
+    let fixture: ComponentFixture<StandardRangeSlider>;
 
     beforeEach(waitForAsync(() => {
-      const fixture = createComponent(StandardSlider, [
+      fixture = createComponent(StandardSlider, [
         {
           provide: Directionality,
           useValue: {value: 'rtl', change: of()},
@@ -1130,6 +1132,7 @@ describe('MatSlider', () => {
       fixture.detectChanges();
       const sliderDebugElement = fixture.debugElement.query(By.directive(MatSlider));
       slider = sliderDebugElement.componentInstance;
+      sliderEl = sliderDebugElement.nativeElement;
       input = slider._getInput(_MatThumb.END) as MatSliderThumb;
     }));
 
@@ -1137,6 +1140,23 @@ describe('MatSlider', () => {
       setValueByClick(slider, input, 25, true);
       checkInput(input, {min: 0, max: 100, value: 75, translateX: 75});
     }));
+
+    it('should position the tick marks correctly with a misaligned step (rtl)', () => {
+      slider.showTickMarks = true;
+      slider.min = 0;
+      slider.max = 10;
+      slider.step = 9;
+
+      fixture.detectChanges();
+
+      const activeClass = '.mdc-slider__tick-mark--active';
+      const inactiveClass = '.mdc-slider__tick-mark--inactive';
+      const ticks = sliderEl.querySelectorAll(`${activeClass},${inactiveClass}`);
+
+      expect(ticks.length).toBe(2);
+      expect(ticks[0].getBoundingClientRect().x).toBe(312);
+      expect(ticks[1].getBoundingClientRect().x).toBeCloseTo(47.4, 2);
+    });
   });
 
   describe('range slider with direction', () => {
@@ -1544,6 +1564,148 @@ describe('MatSlider', () => {
       expect(endInput.value).toBe(80);
     }));
   });
+
+  describe('slider with tick marks', () => {
+    let fixture: ComponentFixture<SliderWithTickMarks>;
+    let slider: MatSlider;
+    let sliderEl: HTMLElement;
+    let input: MatSliderThumb;
+
+    function getTickMarkEls() {
+      const activeClass = '.mdc-slider__tick-mark--active';
+      const inactiveClass = '.mdc-slider__tick-mark--inactive';
+      const active = sliderEl.querySelectorAll(activeClass);
+      const inactive = sliderEl.querySelectorAll(inactiveClass);
+      const ticks = sliderEl.querySelectorAll(`${activeClass},${inactiveClass}`);
+      return {ticks, active, inactive};
+    }
+
+    beforeEach(waitForAsync(() => {
+      fixture = createComponent(SliderWithTickMarks);
+      fixture.detectChanges();
+      const sliderDebugElement = fixture.debugElement.query(By.directive(MatSlider));
+      slider = sliderDebugElement.componentInstance;
+      sliderEl = sliderDebugElement.nativeElement;
+      input = slider._getInput(_MatThumb.END) as MatSliderThumb;
+    }));
+
+    it('should have tick marks', () => {
+      expect(slider._tickMarks.length).toBeTruthy();
+    });
+
+    it('should have the correct number of ticks', () => {
+      expect(slider._tickMarks.length).toBe(101);
+
+      slider.max = 10;
+      expect(slider._tickMarks.length).toBe(11);
+
+      slider.step = 2;
+      expect(slider._tickMarks.length).toBe(6);
+
+      slider.min = 8;
+      expect(slider._tickMarks.length).toBe(2);
+    });
+
+    it('should position the tick marks correctly', () => {
+      const {ticks} = getTickMarkEls();
+
+      // 2.94 because the slider is 300px, there is 3px padding
+      // on each side of the tick mark track, and there are 100
+      // spaces between the 101 ticks. So the math is:
+      // (300 - 6) / 100 = 2.94
+      const spacing = 2.94;
+      const delta = 0.1; // Floating point imprecision
+
+      let x = 18; // Where the first tick happens to start at.
+
+      for (let i = 0; i < ticks.length; i++) {
+        const tickX = ticks[i].getBoundingClientRect().x;
+        expect(tickX).toBeGreaterThan(x - delta);
+        expect(tickX).toBeLessThan(x + delta);
+        x = tickX + spacing;
+      }
+    });
+
+    it('should render the correct number of active & inactive ticks', () => {
+      let tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(1);
+      expect(tickEls.inactive.length).toBe(100);
+
+      input.value = 50;
+      tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(51);
+      expect(tickEls.inactive.length).toBe(50);
+
+      input.value = 100;
+      tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(101);
+      expect(tickEls.inactive.length).toBe(0);
+    });
+
+    it('should position the tick marks correctly with a misaligned step', () => {
+      slider.max = 10;
+      slider.step = 9;
+      fixture.detectChanges();
+
+      const {ticks} = getTickMarkEls();
+      expect(ticks.length).toBe(2);
+
+      expect(ticks[0].getBoundingClientRect().x).toBe(18);
+      expect(ticks[1].getBoundingClientRect().x).toBeCloseTo(282.6, 2);
+    });
+  });
+
+  describe('range slider with tick marks', () => {
+    let fixture: ComponentFixture<RangeSliderWithTickMarks>;
+    let slider: MatSlider;
+    let sliderEl: HTMLElement;
+    let endInput: MatSliderRangeThumb;
+    let startInput: MatSliderRangeThumb;
+
+    function getTickMarkEls() {
+      const activeClass = '.mdc-slider__tick-mark--active';
+      const inactiveClass = '.mdc-slider__tick-mark--inactive';
+      const active = sliderEl.querySelectorAll(activeClass);
+      const inactive = sliderEl.querySelectorAll(inactiveClass);
+      const ticks = sliderEl.querySelectorAll(`${activeClass},${inactiveClass}`);
+      return {ticks, active, inactive};
+    }
+
+    beforeEach(waitForAsync(() => {
+      fixture = createComponent(RangeSliderWithTickMarks);
+      fixture.detectChanges();
+      const sliderDebugElement = fixture.debugElement.query(By.directive(MatSlider));
+      slider = sliderDebugElement.componentInstance;
+      sliderEl = sliderDebugElement.nativeElement;
+      endInput = slider._getInput(_MatThumb.END) as MatSliderRangeThumb;
+      startInput = slider._getInput(_MatThumb.START) as MatSliderRangeThumb;
+    }));
+
+    it('should render the correct number of active & inactive ticks', () => {
+      startInput.value = 0;
+      endInput.value = 100;
+
+      let tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(101);
+      expect(tickEls.inactive.length).toBe(0);
+
+      startInput.value = 25;
+      tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(76);
+      expect(tickEls.inactive.length).toBe(25);
+
+      endInput.value = 75;
+      tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(51);
+      expect(tickEls.inactive.length).toBe(50);
+
+      startInput.value = 50;
+      endInput.value = 50;
+      tickEls = getTickMarkEls();
+      expect(tickEls.active.length).toBe(1);
+      expect(tickEls.inactive.length).toBe(100);
+    });
+  });
 });
 
 const SLIDER_STYLES = ['.mat-mdc-slider { width: 300px; }'];
@@ -1833,6 +1995,33 @@ class RangeSliderWithTwoWayBinding {
   @ViewChildren(MatSliderThumb) sliderInputs: QueryList<MatSliderThumb>;
   startValue = 0;
   endValue = 100;
+}
+
+@Component({
+  template: `
+  <mat-slider [showTickMarks]="true">
+    <input matSliderThumb>
+  </mat-slider>
+  `,
+  styles: SLIDER_STYLES,
+  standalone: false,
+})
+class SliderWithTickMarks {
+  @ViewChild(MatSlider) slider: MatSlider;
+}
+
+@Component({
+  template: `
+  <mat-slider [showTickMarks]="true">
+    <input matSliderStartThumb>
+    <input matSliderEndThumb>
+  </mat-slider>
+  `,
+  styles: SLIDER_STYLES,
+  standalone: false,
+})
+class RangeSliderWithTickMarks {
+  @ViewChild(MatSlider) slider: MatSlider;
 }
 
 /** Clicks on the MatSlider at the coordinates corresponding to the given value. */

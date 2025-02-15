@@ -15,9 +15,11 @@ import {ScrollDispatcher, ViewportRuler} from '@angular/cdk/scrolling';
 import {
   ChangeDetectionStrategy,
   Component,
+  Directive,
   ElementRef,
   EventEmitter,
   Input,
+  OnDestroy,
   Output,
   Provider,
   QueryList,
@@ -1220,46 +1222,37 @@ describe('MatMenu', () => {
     }));
 
     it('should detach the lazy content when the menu is closed', fakeAsync(() => {
-      const fixture = createComponent(SimpleLazyMenu);
+      let destroyCount = 0;
 
+      // Note: for some reason doing `spyOn(item, 'ngOnDestroy')` doesn't work, even though a
+      // `console.log` shows that the `ngOnDestroy` gets called. We work around it with a custom
+      // directive that increments a counter.
+      @Directive({selector: '[mat-menu-item]', standalone: false})
+      class DestroyChecker implements OnDestroy {
+        ngOnDestroy(): void {
+          destroyCount++;
+        }
+      }
+
+      const fixture = createComponent(SimpleLazyMenu, undefined, [DestroyChecker]);
       fixture.detectChanges();
       fixture.componentInstance.trigger.openMenu();
       fixture.detectChanges();
       tick(500);
+      fixture.detectChanges();
 
-      expect(fixture.componentInstance.items.length).toBeGreaterThan(0);
+      expect(fixture.componentInstance.items.length).toBe(2);
+      expect(destroyCount).toBe(0);
 
       fixture.componentInstance.trigger.closeMenu();
       fixture.detectChanges();
       tick(500);
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.items.length).toBe(0);
-    }));
-
-    it('should wait for the close animation to finish before considering the panel as closed', fakeAsync(() => {
-      const fixture = createComponent(SimpleLazyMenu);
-      fixture.detectChanges();
-      const trigger = fixture.componentInstance.trigger;
-
-      expect(trigger.menuOpen).withContext('Expected menu to start off closed').toBe(false);
-
-      trigger.openMenu();
-      fixture.detectChanges();
-      tick(500);
-
-      expect(trigger.menuOpen).withContext('Expected menu to be open').toBe(true);
-
-      trigger.closeMenu();
-      fixture.detectChanges();
-
-      expect(trigger.menuOpen)
-        .withContext('Expected menu to be considered open while the close animation is running')
-        .toBe(true);
-      tick(500);
-      fixture.detectChanges();
-
-      expect(trigger.menuOpen).withContext('Expected menu to be closed').toBe(false);
+      expect(fixture.componentInstance.items.length)
+        .withContext('Expected items to be removed from query list')
+        .toBe(0);
+      expect(destroyCount).withContext('Expected ngOnDestroy to have been called').toBe(2);
     }));
 
     it('should focus the first menu item when opening a lazy menu via keyboard', async () => {
@@ -1741,15 +1734,12 @@ describe('MatMenu', () => {
     }));
 
     it('should complete the callback when the menu is destroyed', fakeAsync(() => {
-      const emitCallback = jasmine.createSpy('emit callback');
       const completeCallback = jasmine.createSpy('complete callback');
 
-      fixture.componentInstance.menu.closed.subscribe(emitCallback, null, completeCallback);
+      fixture.componentInstance.menu.closed.subscribe(null, null, completeCallback);
       fixture.destroy();
       tick(500);
 
-      expect(emitCallback).toHaveBeenCalledWith(undefined);
-      expect(emitCallback).toHaveBeenCalledTimes(1);
       expect(completeCallback).toHaveBeenCalled();
     }));
   });

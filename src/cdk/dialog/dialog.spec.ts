@@ -94,7 +94,18 @@ describe('Dialog', () => {
     viewContainerFixture.detectChanges();
     let dialogContainerElement = overlayContainerElement.querySelector('cdk-dialog-container')!;
     expect(dialogContainerElement.getAttribute('role')).toBe('dialog');
-    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('true');
+    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('false');
+  });
+
+  it('should be able to set aria-modal', () => {
+    dialog.open(PizzaMsg, {
+      viewContainerRef: testViewContainerRef,
+      ariaModal: true,
+    });
+    viewContainerFixture.detectChanges();
+
+    const container = overlayContainerElement.querySelector('cdk-dialog-container')!;
+    expect(container.getAttribute('aria-modal')).toBe('true');
   });
 
   it('should open a dialog with a template', () => {
@@ -117,7 +128,7 @@ describe('Dialog', () => {
 
     let dialogContainerElement = overlayContainerElement.querySelector('cdk-dialog-container')!;
     expect(dialogContainerElement.getAttribute('role')).toBe('dialog');
-    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('true');
+    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('false');
 
     dialogRef.close();
   });
@@ -1205,7 +1216,6 @@ describe('Dialog with a parent Dialog', () => {
 
 @Directive({
   selector: 'dir-with-view-container',
-  standalone: true,
 })
 class DirectiveWithViewContainer {
   viewContainerRef = inject(ViewContainerRef);
@@ -1223,7 +1233,6 @@ class ComponentWithOnPushViewContainer {
 @Component({
   selector: 'arbitrary-component',
   template: `<dir-with-view-container></dir-with-view-container>`,
-  standalone: true,
   imports: [DirectiveWithViewContainer],
 })
 class ComponentWithChildViewContainer {
@@ -1238,7 +1247,6 @@ class ComponentWithChildViewContainer {
   selector: 'arbitrary-component-with-template-ref',
   template: `<ng-template let-data let-dialogRef="dialogRef">
       Cheese {{localValue}} {{data?.value}}{{setDialogRef(dialogRef)}}</ng-template>`,
-  standalone: true,
   imports: [DialogModule],
 })
 class ComponentWithTemplateRef {
@@ -1256,7 +1264,6 @@ class ComponentWithTemplateRef {
 /** Simple component for testing ComponentPortal. */
 @Component({
   template: '<p>Pizza</p> <input> <button>Close</button>',
-  standalone: true,
   imports: [DialogModule],
 })
 class PizzaMsg {
@@ -1269,7 +1276,6 @@ class PizzaMsg {
   template: `
     <h2>This is the title</h2>
   `,
-  standalone: true,
   imports: [DialogModule],
 })
 class ContentElementDialog {
@@ -1279,7 +1285,6 @@ class ContentElementDialog {
 @Component({
   template: '',
   providers: [Dialog],
-  standalone: true,
   imports: [DialogModule],
 })
 class ComponentThatProvidesMatDialog {
@@ -1289,7 +1294,6 @@ class ComponentThatProvidesMatDialog {
 /** Simple component for testing ComponentPortal. */
 @Component({
   template: '',
-  standalone: true,
   imports: [DialogModule],
 })
 class DialogWithInjectedData {
@@ -1298,7 +1302,6 @@ class DialogWithInjectedData {
 
 @Component({
   template: '<p>Pasta</p>',
-  standalone: true,
   imports: [DialogModule],
 })
 class DialogWithoutFocusableElements {}
@@ -1314,7 +1317,6 @@ const TEMPLATE_INJECTOR_TEST_TOKEN = new InjectionToken<string>('TEMPLATE_INJECT
 
 @Directive({
   selector: 'template-injector-inner',
-  standalone: true,
 })
 class TemplateInjectorInnerDirective {
   constructor() {
@@ -1331,7 +1333,6 @@ class TemplateInjectorInnerDirective {
       useValue: 'hello from parent component',
     },
   ],
-  standalone: true,
   imports: [TemplateInjectorInnerDirective],
 })
 class TemplateInjectorParentComponent {

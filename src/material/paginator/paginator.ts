@@ -11,12 +11,10 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
-  Inject,
   InjectionToken,
   Input,
   OnDestroy,
   OnInit,
-  Optional,
   Output,
   ViewEncapsulation,
   booleanAttribute,
@@ -111,6 +109,9 @@ export const MAT_PAGINATOR_DEFAULT_OPTIONS = new InjectionToken<MatPaginatorDefa
   imports: [MatFormField, MatSelect, MatOption, MatIconButton, MatTooltip],
 })
 export class MatPaginator implements OnInit, OnDestroy {
+  _intl = inject(MatPaginatorIntl);
+  private _changeDetectorRef = inject(ChangeDetectorRef);
+
   /** If set, styles the "page size" form field with the designated style. */
   _formFieldAppearance?: MatFormFieldAppearance;
 
@@ -123,10 +124,10 @@ export class MatPaginator implements OnInit, OnDestroy {
 
   /**
    * Theme color of the underlying form controls. This API is supported in M2
-   * themes only,it has no effect in M3 themes.
+   * themes only,it has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/paginator/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   @Input() color: ThemePalette;
 
@@ -198,11 +199,15 @@ export class MatPaginator implements OnInit, OnDestroy {
   /** Emits when the paginator is initialized. */
   initialized: Observable<void> = this._initializedStream;
 
-  constructor(
-    public _intl: MatPaginatorIntl,
-    private _changeDetectorRef: ChangeDetectorRef,
-    @Optional() @Inject(MAT_PAGINATOR_DEFAULT_OPTIONS) defaults?: MatPaginatorDefaultOptions,
-  ) {
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {
+    const _intl = this._intl;
+    const defaults = inject<MatPaginatorDefaultOptions>(MAT_PAGINATOR_DEFAULT_OPTIONS, {
+      optional: true,
+    });
+
     this._intlChanges = _intl.changes.subscribe(() => this._changeDetectorRef.markForCheck());
 
     if (defaults) {
@@ -241,48 +246,32 @@ export class MatPaginator implements OnInit, OnDestroy {
 
   /** Advances to the next page if it exists. */
   nextPage(): void {
-    if (!this.hasNextPage()) {
-      return;
+    if (this.hasNextPage()) {
+      this._navigate(this.pageIndex + 1);
     }
-
-    const previousPageIndex = this.pageIndex;
-    this.pageIndex = this.pageIndex + 1;
-    this._emitPageEvent(previousPageIndex);
   }
 
   /** Move back to the previous page if it exists. */
   previousPage(): void {
-    if (!this.hasPreviousPage()) {
-      return;
+    if (this.hasPreviousPage()) {
+      this._navigate(this.pageIndex - 1);
     }
-
-    const previousPageIndex = this.pageIndex;
-    this.pageIndex = this.pageIndex - 1;
-    this._emitPageEvent(previousPageIndex);
   }
 
   /** Move to the first page if not already there. */
   firstPage(): void {
     // hasPreviousPage being false implies at the start
-    if (!this.hasPreviousPage()) {
-      return;
+    if (this.hasPreviousPage()) {
+      this._navigate(0);
     }
-
-    const previousPageIndex = this.pageIndex;
-    this.pageIndex = 0;
-    this._emitPageEvent(previousPageIndex);
   }
 
   /** Move to the last page if not already there. */
   lastPage(): void {
     // hasNextPage being false implies at the end
-    if (!this.hasNextPage()) {
-      return;
+    if (this.hasNextPage()) {
+      this._navigate(this.getNumberOfPages() - 1);
     }
-
-    const previousPageIndex = this.pageIndex;
-    this.pageIndex = this.getNumberOfPages() - 1;
-    this._emitPageEvent(previousPageIndex);
   }
 
   /** Whether there is a previous page. */
@@ -368,5 +357,29 @@ export class MatPaginator implements OnInit, OnDestroy {
       pageSize: this.pageSize,
       length: this.length,
     });
+  }
+
+  /** Navigates to a specific page index. */
+  private _navigate(index: number) {
+    const previousIndex = this.pageIndex;
+
+    if (index !== previousIndex) {
+      this.pageIndex = index;
+      this._emitPageEvent(previousIndex);
+    }
+  }
+
+  /**
+   * Callback invoked when one of the navigation buttons is called.
+   * @param targetIndex Index to which the paginator should navigate.
+   * @param isDisabled Whether the button is disabled.
+   */
+  protected _buttonClicked(targetIndex: number, isDisabled: boolean) {
+    // Note that normally disabled buttons won't dispatch the click event, but the paginator ones
+    // do, because we're using `disabledInteractive` to allow them to be focusable. We need to
+    // check here to avoid the navigation.
+    if (!isDisabled) {
+      this._navigate(targetIndex);
+    }
   }
 }

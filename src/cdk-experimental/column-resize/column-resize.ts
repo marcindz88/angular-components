@@ -6,10 +6,20 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-import {AfterViewInit, Directive, ElementRef, inject, NgZone, OnDestroy} from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  inject,
+  InjectionToken,
+  Input,
+  NgZone,
+  OnDestroy,
+  Renderer2,
+} from '@angular/core';
 import {_IdGenerator} from '@angular/cdk/a11y';
-import {fromEvent, merge, Subject} from 'rxjs';
-import {filter, map, mapTo, pairwise, startWith, take, takeUntil} from 'rxjs/operators';
+import {merge, Subject} from 'rxjs';
+import {mapTo, pairwise, startWith, take, takeUntil} from 'rxjs/operators';
 
 import {_closest} from '@angular/cdk-experimental/popover-edit';
 
@@ -20,13 +30,23 @@ import {HeaderRowEventDispatcher} from './event-dispatcher';
 const HOVER_OR_ACTIVE_CLASS = 'cdk-column-resize-hover-or-active';
 const WITH_RESIZED_COLUMN_CLASS = 'cdk-column-resize-with-resized-column';
 
+/** Configurable options for column resize. */
+export interface ColumnResizeOptions {
+  liveResizeUpdates?: boolean; // Defaults to true.
+}
+
+export const COLUMN_RESIZE_OPTIONS = new InjectionToken<ColumnResizeOptions>(
+  'CdkColumnResizeOptions',
+);
+
 /**
  * Base class for ColumnResize directives which attach to mat-table elements to
  * provide common events and services for column resizing.
  */
 @Directive()
 export abstract class ColumnResize implements AfterViewInit, OnDestroy {
-  private _idGenerator = inject(_IdGenerator);
+  private _renderer = inject(Renderer2);
+  private _eventCleanups: (() => void)[] | undefined;
   protected readonly destroyed = new Subject<void>();
 
   /* Publicly accessible interface for triggering and being notified of resizes. */
@@ -40,10 +60,20 @@ export abstract class ColumnResize implements AfterViewInit, OnDestroy {
   protected abstract readonly notifier: ColumnResizeNotifierSource;
 
   /** Unique ID for this table instance. */
-  protected readonly selectorId = this._idGenerator.getId('cdk-column-resize-');
+  protected readonly selectorId = inject(_IdGenerator).getId('cdk-column-resize-');
 
   /** The id attribute of the table, if specified. */
   id?: string;
+
+  /** @docs-private Whether a call to updateStickyColumnStyles is pending after a resize. */
+  _flushPending = false;
+
+  /**
+   * Whether to update the column's width continuously as the mouse position
+   * changes, or to wait until mouseup to apply the new size.
+   */
+  @Input() liveResizeUpdates =
+    inject(COLUMN_RESIZE_OPTIONS, {optional: true})?.liveResizeUpdates ?? true;
 
   ngAfterViewInit() {
     this.elementRef.nativeElement!.classList.add(this.getUniqueCssClass());
@@ -54,6 +84,7 @@ export abstract class ColumnResize implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this._eventCleanups?.forEach(cleanup => cleanup());
     this.destroyed.next();
     this.destroyed.complete();
   }
@@ -63,6 +94,11 @@ export abstract class ColumnResize implements AfterViewInit, OnDestroy {
     return this.selectorId;
   }
 
+  /** Gets the ID for this table used for column size persistance. */
+  getTableId(): string {
+    return String(this.elementRef.nativeElement.id);
+  }
+
   /** Called when a column in the table is resized. Applies a css class to the table element. */
   setResized() {
     this.elementRef.nativeElement!.classList.add(WITH_RESIZED_COLUMN_CLASS);
@@ -70,25 +106,21 @@ export abstract class ColumnResize implements AfterViewInit, OnDestroy {
 
   private _listenForRowHoverEvents() {
     this.ngZone.runOutsideAngular(() => {
-      const element = this.elementRef.nativeElement!;
+      const element = this.elementRef.nativeElement;
 
-      fromEvent<MouseEvent>(element, 'mouseover')
-        .pipe(
-          map(event => _closest(event.target, HEADER_CELL_SELECTOR)),
-          takeUntil(this.destroyed),
-        )
-        .subscribe(this.eventDispatcher.headerCellHovered);
-      fromEvent<MouseEvent>(element, 'mouseleave')
-        .pipe(
-          filter(
-            event =>
-              !!event.relatedTarget &&
-              !(event.relatedTarget as Element).matches(RESIZE_OVERLAY_SELECTOR),
-          ),
-          mapTo(null),
-          takeUntil(this.destroyed),
-        )
-        .subscribe(this.eventDispatcher.headerCellHovered);
+      this._eventCleanups = [
+        this._renderer.listen(element, 'mouseover', (event: MouseEvent) => {
+          this.eventDispatcher.headerCellHovered.next(_closest(event.target, HEADER_CELL_SELECTOR));
+        }),
+        this._renderer.listen(element, 'mouseleave', (event: MouseEvent) => {
+          if (
+            event.relatedTarget &&
+            !(event.relatedTarget as Element).matches(RESIZE_OVERLAY_SELECTOR)
+          ) {
+            this.eventDispatcher.headerCellHovered.next(null);
+          }
+        }),
+      ];
     });
   }
 

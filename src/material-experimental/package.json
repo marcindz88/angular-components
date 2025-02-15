@@ -17,7 +17,6 @@
     }
   },
   "peerDependencies": {
-    "@angular/animations": "0.0.0-NG",
     "@angular/cdk": "0.0.0-PLACEHOLDER",
     "@angular/core": "0.0.0-NG",
     "@angular/common": "0.0.0-NG",
@@ -27,6 +26,9 @@
   },
   "dependencies": {
     "tslib": "0.0.0-TSLIB"
+  },
+  "ng-update": {
+    "packageGroup": "NG_UPDATE_PACKAGE_GROUP"
   },
   "sideEffects": false
 }

@@ -8,8 +8,6 @@ import { AbstractControl } from '@angular/forms';
 import { AfterContentInit } from '@angular/core';
 import { AfterViewChecked } from '@angular/core';
 import { AfterViewInit } from '@angular/core';
-import { AnimationEvent as AnimationEvent_2 } from '@angular/animations';
-import { AnimationTriggerMetadata } from '@angular/animations';
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentType } from '@angular/cdk/portal';
 import { ControlValueAccessor } from '@angular/forms';
@@ -41,7 +39,6 @@ import { OnInit } from '@angular/core';
 import { Overlay } from '@angular/cdk/overlay';
 import { Portal } from '@angular/cdk/portal';
 import { ScrollStrategy } from '@angular/cdk/overlay';
-import { Signal } from '@angular/core';
 import { SimpleChanges } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TemplatePortal } from '@angular/cdk/portal';
@@ -339,10 +336,10 @@ export class MatDatepickerActions implements AfterViewInit, OnDestroy {
     static ɵfac: i0.ɵɵFactoryDeclaration<MatDatepickerActions, never>;
 }
 
-// @public
+// @public @deprecated
 export const matDatepickerAnimations: {
-    readonly transformPanel: AnimationTriggerMetadata;
-    readonly fadeInCalendar: AnimationTriggerMetadata;
+    readonly transformPanel: any;
+    readonly fadeInCalendar: any;
 };
 
 // @public
@@ -368,11 +365,12 @@ export class MatDatepickerCancel {
 }
 
 // @public
-export class MatDatepickerContent<S, D = ExtractDateTypeFromSelection<S>> implements OnInit, AfterViewInit, OnDestroy {
+export class MatDatepickerContent<S, D = ExtractDateTypeFromSelection<S>> implements AfterViewInit, OnDestroy {
     constructor(...args: unknown[]);
     _actionsPortal: TemplatePortal | null;
     readonly _animationDone: Subject<void>;
-    _animationState: 'enter-dropdown' | 'enter-dialog' | 'void';
+    // (undocumented)
+    protected _animationsDisabled: boolean;
     _applyPendingSelection(): void;
     _assignActions(portal: TemplatePortal<any> | null, forceRerender: boolean): void;
     _calendar: MatCalendar<D>;
@@ -384,12 +382,10 @@ export class MatDatepickerContent<S, D = ExtractDateTypeFromSelection<S>> implem
     datepicker: MatDatepickerBase<any, S, D>;
     _dialogLabelId: string | null;
     // (undocumented)
-    protected _elementRef: ElementRef<any>;
+    protected _elementRef: ElementRef<HTMLElement>;
     endDateAccessibleName: string | null;
     // (undocumented)
     _getSelected(): D | DateRange<D> | null;
-    // (undocumented)
-    _handleAnimationEvent(event: AnimationEvent_2): void;
     // (undocumented)
     _handleUserDragDrop(event: MatCalendarUserEvent<DateRange<D>>): void;
     // (undocumented)
@@ -400,8 +396,6 @@ export class MatDatepickerContent<S, D = ExtractDateTypeFromSelection<S>> implem
     ngAfterViewInit(): void;
     // (undocumented)
     ngOnDestroy(): void;
-    // (undocumented)
-    ngOnInit(): void;
     startDateAccessibleName: string | null;
     // (undocumented)
     _startExitAnimation(): void;
@@ -568,7 +562,7 @@ export class MatDatepickerToggleIcon {
 }
 
 // @public (undocumented)
-export class MatDateRangeInput<D> implements MatFormFieldControl<DateRange<D>>, MatDatepickerControl<D>, MatDateRangeInputParent<D>, MatDateRangePickerInput<D>, AfterContentInit, OnChanges, OnDestroy {
+export class MatDateRangeInput<D> implements MatFormFieldControl<DateRange<D>>, MatDatepickerControl<D>, MatDateRangePickerInput<D>, AfterContentInit, OnChanges, OnDestroy {
     constructor(...args: unknown[]);
     _ariaDescribedBy: string | null;
     _ariaOwns: WritableSignal<string | null>;
@@ -632,7 +626,7 @@ export class MatDateRangeInput<D> implements MatFormFieldControl<DateRange<D>>, 
     _updateFocus(origin: FocusOrigin): void;
     get value(): DateRange<D> | null;
     // (undocumented)
-    static ɵcmp: i0.ɵɵComponentDeclaration<MatDateRangeInput<any>, "mat-date-range-input", ["matDateRangeInput"], { "rangePicker": { "alias": "rangePicker"; "required": false; }; "required": { "alias": "required"; "required": false; }; "dateFilter": { "alias": "dateFilter"; "required": false; }; "min": { "alias": "min"; "required": false; }; "max": { "alias": "max"; "required": false; }; "disabled": { "alias": "disabled"; "required": false; }; "separator": { "alias": "separator"; "required": false; }; "comparisonStart": { "alias": "comparisonStart"; "required": false; }; "comparisonEnd": { "alias": "comparisonEnd"; "required": false; }; }, {}, ["_startInput", "_endInput"], ["input[matStartDate]", "input[matEndDate]"], true, never>;
+    static ɵcmp: i0.ɵɵComponentDeclaration<MatDateRangeInput<any>, "mat-date-range-input", ["matDateRangeInput"], { "rangePicker": { "alias": "rangePicker"; "required": false; }; "required": { "alias": "required"; "required": false; }; "dateFilter": { "alias": "dateFilter"; "required": false; }; "min": { "alias": "min"; "required": false; }; "max": { "alias": "max"; "required": false; }; "disabled": { "alias": "disabled"; "required": false; }; "separator": { "alias": "separator"; "required": false; }; "comparisonStart": { "alias": "comparisonStart"; "required": false; }; "comparisonEnd": { "alias": "comparisonEnd"; "required": false; }; }, {}, never, ["input[matStartDate]", "input[matEndDate]"], true, never>;
     // (undocumented)
     static ɵfac: i0.ɵɵFactoryDeclaration<MatDateRangeInput<any>, never>;
 }
@@ -685,6 +679,8 @@ export class MatEndDate<D> extends MatDateRangeInputPartBase<D> {
     protected _getValueFromModel(modelValue: DateRange<D>): D | null;
     // (undocumented)
     _onKeydown(event: KeyboardEvent): void;
+    // (undocumented)
+    protected _register(): void;
     // (undocumented)
     protected _shouldHandleChangeEvent(change: DateSelectionModelChange<DateRange<D>>): boolean;
     // (undocumented)
@@ -837,6 +833,8 @@ export class MatStartDate<D> extends MatDateRangeInputPartBase<D> {
     protected _getValueFromModel(modelValue: DateRange<D>): D | null;
     // (undocumented)
     _onKeydown(event: KeyboardEvent): void;
+    // (undocumented)
+    protected _register(): void;
     // (undocumented)
     protected _shouldHandleChangeEvent(change: DateSelectionModelChange<DateRange<D>>): boolean;
     // (undocumented)

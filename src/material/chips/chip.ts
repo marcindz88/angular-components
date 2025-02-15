@@ -6,8 +6,9 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-import {_IdGenerator, FocusMonitor} from '@angular/cdk/a11y';
+import {FocusMonitor, _IdGenerator} from '@angular/cdk/a11y';
 import {BACKSPACE, DELETE} from '@angular/cdk/keycodes';
+import {_CdkPrivateStyleLoader, _VisuallyHiddenLoader} from '@angular/cdk/private';
 import {DOCUMENT} from '@angular/common';
 import {
   ANIMATION_MODULE_TYPE,
@@ -30,21 +31,19 @@ import {
   QueryList,
   ViewChild,
   ViewEncapsulation,
-  afterNextRender,
   booleanAttribute,
   inject,
 } from '@angular/core';
 import {
-  _StructuralStylesLoader,
   MAT_RIPPLE_GLOBAL_OPTIONS,
   MatRippleLoader,
   RippleGlobalOptions,
+  _StructuralStylesLoader,
 } from '@angular/material/core';
 import {Subject, Subscription, merge} from 'rxjs';
 import {MatChipAction} from './chip-action';
 import {MatChipAvatar, MatChipRemove, MatChipTrailingIcon} from './chip-icons';
 import {MAT_CHIP, MAT_CHIP_AVATAR, MAT_CHIP_REMOVE, MAT_CHIP_TRAILING_ICON} from './tokens';
-import {_CdkPrivateStyleLoader, _VisuallyHiddenLoader} from '@angular/cdk/private';
 
 /** Represents an event fired on an individual `mat-chip`. */
 export interface MatChipEvent {
@@ -178,10 +177,10 @@ export class MatChip implements OnInit, AfterViewInit, AfterContentInit, DoCheck
   // TODO: should be typed as `ThemePalette` but internal apps pass in arbitrary strings.
   /**
    * Theme color of the chip. This API is supported in M2 themes only, it has no
-   * effect in M3 themes.
+   * effect in M3 themes. For color customization in M3, see https://material.angular.io/components/chips/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   @Input() color?: string | null;
 
@@ -243,8 +242,9 @@ export class MatChip implements OnInit, AfterViewInit, AfterContentInit, DoCheck
   constructor(...args: unknown[]);
 
   constructor() {
-    inject(_CdkPrivateStyleLoader).load(_StructuralStylesLoader);
-    inject(_CdkPrivateStyleLoader).load(_VisuallyHiddenLoader);
+    const styleLoader = inject(_CdkPrivateStyleLoader);
+    styleLoader.load(_StructuralStylesLoader);
+    styleLoader.load(_VisuallyHiddenLoader);
     const animationMode = inject(ANIMATION_MODULE_TYPE, {optional: true});
     this._animationsDisabled = animationMode === 'NoopAnimations';
     this._monitorFocus();
@@ -391,11 +391,10 @@ export class MatChip implements OnInit, AfterViewInit, AfterContentInit, DoCheck
         } else {
           // When animations are enabled, Angular may end up removing the chip from the DOM a little
           // earlier than usual, causing it to be blurred and throwing off the logic in the chip list
-          // that moves focus not the next item. To work around the issue, we defer marking the chip
+          // that moves focus to the next item. To work around the issue, we defer marking the chip
           // as not focused until after the next render.
-          afterNextRender(() => this._ngZone.run(() => this._onBlur.next({chip: this})), {
-            injector: this._injector,
-          });
+          this._changeDetectorRef.markForCheck();
+          setTimeout(() => this._ngZone.run(() => this._onBlur.next({chip: this})));
         }
       }
     });

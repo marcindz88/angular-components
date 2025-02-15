@@ -36,6 +36,7 @@ import {
   inject,
   numberAttribute,
   HostAttributeToken,
+  Renderer2,
 } from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {
@@ -78,10 +79,10 @@ export const MAT_RADIO_GROUP = new InjectionToken<MatRadioGroup>('MatRadioGroup'
 export interface MatRadioDefaultOptions {
   /**
    * Theme color of the radio button. This API is supported in M2 themes only, it
-   * has no effect in M3 themes.
+   * has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/radio/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   color: ThemePalette;
 
@@ -168,10 +169,10 @@ export class MatRadioGroup implements AfterContentInit, OnDestroy, ControlValueA
 
   /**
    * Theme color of the radio buttons in the group. This API is supported in M2
-   * themes only, it has no effect in M3 themes.
+   * themes only, it has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/radio/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   @Input() color: ThemePalette;
 
@@ -419,7 +420,9 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
   });
 
   private _ngZone = inject(NgZone);
-  private _uniqueId: string = inject(_IdGenerator).getId('mat-radio-');
+  private _renderer = inject(Renderer2);
+  private _uniqueId = inject(_IdGenerator).getId('mat-radio-');
+  private _cleanupClick: (() => void) | undefined;
 
   /** The unique ID for the radio button. */
   @Input() id: string = this._uniqueId;
@@ -520,10 +523,10 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
 
   /**
    * Theme color of the radio button. This API is supported in M2 themes only, it
-   * has no effect in M3 themes.
+   * has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/radio/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   @Input()
   get color(): ThemePalette {
@@ -673,13 +676,16 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
     // 1. Its logic is completely DOM-related so we can avoid some change detections.
     // 2. There appear to be some internal tests that break when this triggers a change detection.
     this._ngZone.runOutsideAngular(() => {
-      this._inputElement.nativeElement.addEventListener('click', this._onInputClick);
+      this._cleanupClick = this._renderer.listen(
+        this._inputElement.nativeElement,
+        'click',
+        this._onInputClick,
+      );
     });
   }
 
   ngOnDestroy() {
-    // We need to null check in case the button was destroyed before `ngAfterViewInit`.
-    this._inputElement?.nativeElement.removeEventListener('click', this._onInputClick);
+    this._cleanupClick?.();
     this._focusMonitor.stopMonitoring(this._elementRef);
     this._removeUniqueSelectionListener();
   }

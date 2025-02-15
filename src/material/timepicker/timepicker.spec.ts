@@ -955,6 +955,18 @@ describe('MatTimepicker', () => {
       fixture.detectChanges();
       expect(fixture.componentInstance.control.touched).toBe(false);
 
+      getInput(fixture).click();
+      fixture.detectChanges();
+      dispatchFakeEvent(getInput(fixture), 'blur');
+      fixture.detectChanges();
+      expect(fixture.componentInstance.control.touched).toBe(false);
+    });
+
+    it('should mark the control as touched on blur while dropdown is open', () => {
+      const fixture = TestBed.createComponent(TimepickerWithForms);
+      fixture.detectChanges();
+      expect(fixture.componentInstance.control.touched).toBe(false);
+
       dispatchFakeEvent(getInput(fixture), 'blur');
       fixture.detectChanges();
       expect(fixture.componentInstance.control.touched).toBe(true);
@@ -1121,11 +1133,11 @@ describe('MatTimepicker', () => {
       expect(toggle.getAttribute('aria-expanded')).toBe('true');
     });
 
-    it('should be able to set aria-label on the button', () => {
+    it('should be able to set custom aria-label on the button', () => {
       const fixture = TestBed.createComponent(StandaloneTimepicker);
       const toggle = getToggle(fixture);
       fixture.detectChanges();
-      expect(toggle.hasAttribute('aria-label')).toBe(false);
+      expect(toggle.hasAttribute('aria-label')).toBe(true);
 
       fixture.componentInstance.toggleAriaLabel.set('Toggle the timepicker');
       fixture.detectChanges();
@@ -1163,6 +1175,19 @@ describe('MatTimepicker', () => {
       getToggle(fixture).click();
       fixture.detectChanges();
       expect(getPanel()).toBeFalsy();
+    });
+
+    it('should disable the toggle when the timepicker is disabled', () => {
+      const fixture = TestBed.createComponent(StandaloneTimepicker);
+      const toggle = getToggle(fixture);
+      fixture.detectChanges();
+      expect(toggle.disabled).toBe(false);
+      expect(toggle.getAttribute('tabindex')).toBe('0');
+
+      fixture.componentInstance.disabled.set(true);
+      fixture.detectChanges();
+      expect(toggle.disabled).toBe(true);
+      expect(toggle.getAttribute('tabindex')).toBe('-1');
     });
   });
 
@@ -1261,7 +1286,6 @@ describe('MatTimepicker', () => {
       [disabled]="toggleDisabled()"
       [tabIndex]="toggleTabIndex()"/>
   `,
-  standalone: true,
   imports: [MatTimepicker, MatTimepickerInput, MatTimepickerToggle],
 })
 class StandaloneTimepicker {
@@ -1292,7 +1316,6 @@ class StandaloneTimepicker {
       <mat-timepicker-toggle [for]="picker" matSuffix/>
     </mat-form-field>
   `,
-  standalone: true,
   imports: [
     MatTimepicker,
     MatTimepickerInput,
@@ -1313,7 +1336,6 @@ class TimepickerInFormField {
     <input [matTimepicker]="picker" [(value)]="value"/>
     <mat-timepicker #picker/>
   `,
-  standalone: true,
   imports: [MatTimepicker, MatTimepickerInput],
 })
 class TimepickerTwoWayBinding {
@@ -1330,7 +1352,6 @@ class TimepickerTwoWayBinding {
       [matTimepickerMax]="max()"/>
     <mat-timepicker #picker/>
   `,
-  standalone: true,
   imports: [MatTimepicker, MatTimepickerInput, ReactiveFormsModule],
 })
 class TimepickerWithForms {
@@ -1346,14 +1367,12 @@ class TimepickerWithForms {
     <input [matTimepicker]="picker"/>
     <mat-timepicker #picker/>
   `,
-  standalone: true,
   imports: [MatTimepicker, MatTimepickerInput],
 })
 class TimepickerWithMultipleInputs {}
 
 @Component({
   template: '<mat-timepicker/>',
-  standalone: true,
   imports: [MatTimepicker],
 })
 class TimepickerWithoutInput {

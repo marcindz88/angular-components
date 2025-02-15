@@ -24,6 +24,14 @@ export interface Schema {
    */
   neutralColor?: string;
   /**
+   * Color to override the neutral variant color palette.
+   */
+  neutralVariantColor?: string;
+  /**
+   * Color to override the error color palette.
+   */
+  errorColor?: string;
+  /**
    * Whether to create high contrast override theme mixins.
    */
   includeHighContrast?: boolean;
@@ -34,4 +42,12 @@ export interface Schema {
    * If not set, the file will be generated at the project root.
    */
   directory?: string;
+
+  /**
+   * Whether to generate output file in scss or CSS. CSS directly defines all the system variables
+   * instead of having a separate theme scss file where you call the `theme()` mixin.
+   *
+   * If not set, the generated theme file will be a scss file.
+   */
+  isScss?: boolean;
 }

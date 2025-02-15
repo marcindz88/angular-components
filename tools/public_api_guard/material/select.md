@@ -6,7 +6,6 @@
 
 import { ActiveDescendantKeyManager } from '@angular/cdk/a11y';
 import { AfterContentInit } from '@angular/core';
-import { AnimationTriggerMetadata } from '@angular/animations';
 import { CdkConnectedOverlay } from '@angular/cdk/overlay';
 import { CdkOverlayOrigin } from '@angular/cdk/overlay';
 import { ChangeDetectorRef } from '@angular/core';
@@ -81,9 +80,12 @@ export { MatPrefix }
 // @public (undocumented)
 export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit, DoCheck, ControlValueAccessor, MatFormFieldControl<any> {
     constructor(...args: unknown[]);
+    // (undocumented)
+    protected _animationsDisabled: boolean;
     ariaLabel: string;
     ariaLabelledby: string;
     protected _canOpen(): boolean;
+    canSelectNullableOptions: boolean;
     // (undocumented)
     protected _changeDetectorRef: ChangeDetectorRef;
     close(): void;
@@ -112,6 +114,7 @@ export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit
     _getPanelAriaLabelledby(): string | null;
     _getPanelTheme(): string;
     _handleKeydown(event: KeyboardEvent): void;
+    protected _handleOverlayKeydown(event: KeyboardEvent): void;
     get hideSingleSelectionIndicator(): boolean;
     set hideSingleSelectionIndicator(value: boolean);
     get id(): string;
@@ -120,6 +123,8 @@ export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit
     _keyManager: ActiveDescendantKeyManager<MatOption>;
     get multiple(): boolean;
     set multiple(value: boolean);
+    // (undocumented)
+    static ngAcceptInputType_canSelectNullableOptions: unknown;
     // (undocumented)
     static ngAcceptInputType_disabled: unknown;
     // (undocumented)
@@ -148,7 +153,6 @@ export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit
     ngOnDestroy(): void;
     // (undocumented)
     ngOnInit(): void;
-    _onAttached(): void;
     _onBlur(): void;
     _onChange: (value: any) => void;
     onContainerClick(): void;
@@ -169,8 +173,6 @@ export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit
     panelClass: string | string[] | Set<string> | {
         [key: string]: any;
     };
-    protected _panelDoneAnimating(isOpen: boolean): void;
-    readonly _panelDoneAnimatingStream: Subject<string>;
     get panelOpen(): boolean;
     panelWidth: string | number | null;
     // (undocumented)
@@ -209,15 +211,15 @@ export class MatSelect implements AfterContentInit, OnChanges, OnDestroy, OnInit
     protected _viewportRuler: ViewportRuler;
     writeValue(value: any): void;
     // (undocumented)
-    static ɵcmp: i0.ɵɵComponentDeclaration<MatSelect, "mat-select", ["matSelect"], { "userAriaDescribedBy": { "alias": "aria-describedby"; "required": false; }; "panelClass": { "alias": "panelClass"; "required": false; }; "disabled": { "alias": "disabled"; "required": false; }; "disableRipple": { "alias": "disableRipple"; "required": false; }; "tabIndex": { "alias": "tabIndex"; "required": false; }; "hideSingleSelectionIndicator": { "alias": "hideSingleSelectionIndicator"; "required": false; }; "placeholder": { "alias": "placeholder"; "required": false; }; "required": { "alias": "required"; "required": false; }; "multiple": { "alias": "multiple"; "required": false; }; "disableOptionCentering": { "alias": "disableOptionCentering"; "required": false; }; "compareWith": { "alias": "compareWith"; "required": false; }; "value": { "alias": "value"; "required": false; }; "ariaLabel": { "alias": "aria-label"; "required": false; }; "ariaLabelledby": { "alias": "aria-labelledby"; "required": false; }; "errorStateMatcher": { "alias": "errorStateMatcher"; "required": false; }; "typeaheadDebounceInterval": { "alias": "typeaheadDebounceInterval"; "required": false; }; "sortComparator": { "alias": "sortComparator"; "required": false; }; "id": { "alias": "id"; "required": false; }; "panelWidth": { "alias": "panelWidth"; "required": false; }; }, { "openedChange": "openedChange"; "_openedStream": "opened"; "_closedStream": "closed"; "selectionChange": "selectionChange"; "valueChange": "valueChange"; }, ["customTrigger", "options", "optionGroups"], ["mat-select-trigger", "*"], true, never>;
+    static ɵcmp: i0.ɵɵComponentDeclaration<MatSelect, "mat-select", ["matSelect"], { "userAriaDescribedBy": { "alias": "aria-describedby"; "required": false; }; "panelClass": { "alias": "panelClass"; "required": false; }; "disabled": { "alias": "disabled"; "required": false; }; "disableRipple": { "alias": "disableRipple"; "required": false; }; "tabIndex": { "alias": "tabIndex"; "required": false; }; "hideSingleSelectionIndicator": { "alias": "hideSingleSelectionIndicator"; "required": false; }; "placeholder": { "alias": "placeholder"; "required": false; }; "required": { "alias": "required"; "required": false; }; "multiple": { "alias": "multiple"; "required": false; }; "disableOptionCentering": { "alias": "disableOptionCentering"; "required": false; }; "compareWith": { "alias": "compareWith"; "required": false; }; "value": { "alias": "value"; "required": false; }; "ariaLabel": { "alias": "aria-label"; "required": false; }; "ariaLabelledby": { "alias": "aria-labelledby"; "required": false; }; "errorStateMatcher": { "alias": "errorStateMatcher"; "required": false; }; "typeaheadDebounceInterval": { "alias": "typeaheadDebounceInterval"; "required": false; }; "sortComparator": { "alias": "sortComparator"; "required": false; }; "id": { "alias": "id"; "required": false; }; "panelWidth": { "alias": "panelWidth"; "required": false; }; "canSelectNullableOptions": { "alias": "canSelectNullableOptions"; "required": false; }; }, { "openedChange": "openedChange"; "_openedStream": "opened"; "_closedStream": "closed"; "selectionChange": "selectionChange"; "valueChange": "valueChange"; }, ["customTrigger", "options", "optionGroups"], ["mat-select-trigger", "*"], true, never>;
     // (undocumented)
     static ɵfac: i0.ɵɵFactoryDeclaration<MatSelect, never>;
 }
 
-// @public
+// @public @deprecated
 export const matSelectAnimations: {
-    readonly transformPanelWrap: AnimationTriggerMetadata;
-    readonly transformPanel: AnimationTriggerMetadata;
+    readonly transformPanelWrap: any;
+    readonly transformPanel: any;
 };
 
 // @public
@@ -231,6 +233,7 @@ export class MatSelectChange {
 
 // @public
 export interface MatSelectConfig {
+    canSelectNullableOptions?: boolean;
     disableOptionCentering?: boolean;
     hideSingleSelectionIndicator?: boolean;
     overlayPanelClass?: string | string[];

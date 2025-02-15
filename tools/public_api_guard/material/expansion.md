@@ -6,8 +6,6 @@
 
 import { AfterContentInit } from '@angular/core';
 import { AfterViewInit } from '@angular/core';
-import { AnimationEvent as AnimationEvent_2 } from '@angular/animations';
-import { AnimationTriggerMetadata } from '@angular/animations';
 import { CdkAccordion } from '@angular/cdk/accordion';
 import { CdkAccordionItem } from '@angular/cdk/accordion';
 import { ElementRef } from '@angular/core';
@@ -27,7 +25,7 @@ import { Subject } from 'rxjs';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { TemplateRef } from '@angular/core';
 
-// @public
+// @public @deprecated
 export const EXPANSION_PANEL_ANIMATION_TIMING = "225ms cubic-bezier(0.4,0.0,0.2,1)";
 
 // @public
@@ -75,10 +73,10 @@ export type MatAccordionDisplayMode = 'default' | 'flat';
 // @public
 export type MatAccordionTogglePosition = 'before' | 'after';
 
-// @public
+// @public @deprecated
 export const matExpansionAnimations: {
-    readonly indicatorRotate: AnimationTriggerMetadata;
-    readonly bodyExpansion: AnimationTriggerMetadata;
+    readonly indicatorRotate: any;
+    readonly bodyExpansion: any;
 };
 
 // @public (undocumented)
@@ -97,13 +95,8 @@ export class MatExpansionPanel extends CdkAccordionItem implements AfterContentI
     accordion: MatAccordionBase;
     readonly afterCollapse: EventEmitter<void>;
     readonly afterExpand: EventEmitter<void>;
-    protected _animationDone(event: AnimationEvent_2): void;
-    // (undocumented)
-    _animationMode: "NoopAnimations" | "BrowserAnimations" | null;
-    // (undocumented)
-    protected _animationsDisabled: boolean;
-    protected _animationStarted(event: AnimationEvent_2): void;
     _body: ElementRef<HTMLElement>;
+    protected _bodyWrapper: ElementRef<HTMLElement> | undefined;
     close(): void;
     _containsFocus(): boolean;
     _getExpandedState(): MatExpansionPanelState;
@@ -123,6 +116,8 @@ export class MatExpansionPanel extends CdkAccordionItem implements AfterContentI
     ngOnDestroy(): void;
     open(): void;
     _portal: TemplatePortal;
+    // (undocumented)
+    protected _setupAnimationEvents(): void;
     toggle(): void;
     get togglePosition(): MatAccordionTogglePosition;
     set togglePosition(value: MatAccordionTogglePosition);
@@ -171,8 +166,6 @@ export class MatExpansionPanelDescription {
 // @public
 export class MatExpansionPanelHeader implements AfterViewInit, OnDestroy, FocusableOption {
     constructor(...args: unknown[]);
-    // (undocumented)
-    _animationMode: "NoopAnimations" | "BrowserAnimations" | null;
     collapsedHeight: string;
     get disabled(): boolean;
     expandedHeight: string;

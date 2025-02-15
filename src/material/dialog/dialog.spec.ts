@@ -112,7 +112,18 @@ describe('MatDialog', () => {
     viewContainerFixture.detectChanges();
     let dialogContainerElement = overlayContainerElement.querySelector('mat-dialog-container')!;
     expect(dialogContainerElement.getAttribute('role')).toBe('dialog');
-    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('true');
+    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('false');
+  });
+
+  it('should be able to set aria-modal', () => {
+    dialog.open(PizzaMsg, {
+      viewContainerRef: testViewContainerRef,
+      ariaModal: true,
+    });
+    viewContainerFixture.detectChanges();
+
+    const container = overlayContainerElement.querySelector('mat-dialog-container')!;
+    expect(container.getAttribute('aria-modal')).toBe('true');
   });
 
   it('should open a dialog with a template', () => {
@@ -134,7 +145,7 @@ describe('MatDialog', () => {
 
     let dialogContainerElement = overlayContainerElement.querySelector('mat-dialog-container')!;
     expect(dialogContainerElement.getAttribute('role')).toBe('dialog');
-    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('true');
+    expect(dialogContainerElement.getAttribute('aria-modal')).toBe('false');
 
     dialogRef.close();
   });
@@ -1581,7 +1592,6 @@ describe('MatDialog', () => {
 
     it('should set the aria-labelledby attribute to the id of the title under OnPush host', fakeAsync(() => {
       @Component({
-        standalone: true,
         imports: [MatDialogTitle],
         template: `@if (showTitle()) { <h2 mat-dialog-title>This is the first title</h2> }`,
       })
@@ -1592,7 +1602,6 @@ describe('MatDialog', () => {
       @Component({
         template: '',
         selector: 'child',
-        standalone: true,
       })
       class Child {
         readonly viewContainerRef = inject(ViewContainerRef);
@@ -1606,7 +1615,6 @@ describe('MatDialog', () => {
       }
 
       @Component({
-        standalone: true,
         imports: [Child],
         template: `<child></child>`,
         changeDetection: ChangeDetectionStrategy.OnPush,
@@ -2113,7 +2121,6 @@ describe('MatDialog with explicit injector provided', () => {
 
 @Directive({
   selector: 'dir-with-view-container',
-  standalone: true,
 })
 class DirectiveWithViewContainer {
   viewContainerRef = inject(ViewContainerRef);
@@ -2131,7 +2138,6 @@ class ComponentWithOnPushViewContainer {
 @Component({
   selector: 'arbitrary-component',
   template: `@if (showChildView) {<dir-with-view-container></dir-with-view-container>}`,
-  standalone: true,
   imports: [DirectiveWithViewContainer],
 })
 class ComponentWithChildViewContainer {
@@ -2148,7 +2154,6 @@ class ComponentWithChildViewContainer {
   selector: 'arbitrary-component-with-template-ref',
   template: `<ng-template let-data let-dialogRef="dialogRef">
     Cheese {{localValue}} {{data?.value}}{{setDialogRef(dialogRef)}}</ng-template>`,
-  standalone: true,
 })
 class ComponentWithTemplateRef {
   localValue: string;
@@ -2165,7 +2170,6 @@ class ComponentWithTemplateRef {
 /** Simple component for testing ComponentPortal. */
 @Component({
   template: '<p>Pizza</p> <input> <button>Close</button>',
-  standalone: true,
 })
 class PizzaMsg {
   dialogRef = inject<MatDialogRef<PizzaMsg>>(MatDialogRef);
@@ -2196,7 +2200,6 @@ class PizzaMsg {
       <button class="with-submit" type="submit" mat-dialog-close>Should have submit</button>
     </mat-dialog-actions>
   `,
-  standalone: true,
   imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose],
 })
 class ContentElementDialog {
@@ -2232,7 +2235,6 @@ class ContentElementDialog {
       </mat-dialog-actions>
     </ng-template>
   `,
-  standalone: true,
   imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose],
 })
 class ComponentWithContentElementTemplateRef {
@@ -2248,7 +2250,6 @@ class ComponentWithContentElementTemplateRef {
 @Component({
   template: '',
   providers: [MatDialog],
-  standalone: true,
 })
 class ComponentThatProvidesMatDialog {
   dialog = inject(MatDialog);
@@ -2257,7 +2258,6 @@ class ComponentThatProvidesMatDialog {
 /** Simple component for testing ComponentPortal. */
 @Component({
   template: '',
-  standalone: true,
 })
 class DialogWithInjectedData {
   data = inject(MAT_DIALOG_DATA);
@@ -2265,7 +2265,6 @@ class DialogWithInjectedData {
 
 @Component({
   template: '<p>Pasta</p>',
-  standalone: true,
 })
 class DialogWithoutFocusableElements {}
 
@@ -2278,7 +2277,6 @@ class ShadowDomComponent {}
 
 @Component({
   template: '',
-  standalone: true,
 })
 class ModuleBoundDialogParentComponent {
   private _injector = inject(Injector);
@@ -2301,7 +2299,6 @@ class ModuleBoundDialogService {
 
 @Component({
   template: '<module-bound-dialog-child-component></module-bound-dialog-child-component>',
-  standalone: true,
   imports: [forwardRef(() => ModuleBoundDialogChildComponent)],
 })
 class ModuleBoundDialogComponent {}
@@ -2309,7 +2306,6 @@ class ModuleBoundDialogComponent {}
 @Component({
   selector: 'module-bound-dialog-child-component',
   template: '<p>{{service.name}}</p>',
-  standalone: true,
 })
 class ModuleBoundDialogChildComponent {
   service = inject(ModuleBoundDialogService);

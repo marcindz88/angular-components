@@ -6,8 +6,6 @@
 
 import { AfterContentInit } from '@angular/core';
 import { AfterViewInit } from '@angular/core';
-import { AnimationEvent as AnimationEvent_2 } from '@angular/animations';
-import { AnimationTriggerMetadata } from '@angular/animations';
 import { Direction } from '@angular/cdk/bidi';
 import { EventEmitter } from '@angular/core';
 import { FocusableOption } from '@angular/cdk/a11y';
@@ -27,7 +25,7 @@ import { Subject } from 'rxjs';
 import { TemplateRef } from '@angular/core';
 
 // @public @deprecated (undocumented)
-export const fadeInItems: AnimationTriggerMetadata;
+export const fadeInItems: any;
 
 // @public
 export const MAT_MENU_CONTENT: InjectionToken<MatMenuContent>;
@@ -54,7 +52,8 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
     // (undocumented)
     addItem(_item: MatMenuItem): void;
     _allItems: QueryList<MatMenuItem>;
-    readonly _animationDone: Subject<AnimationEvent_2>;
+    readonly _animationDone: Subject<"void" | "enter">;
+    protected _animationsDisabled: boolean;
     ariaDescribedby: string;
     ariaLabel: string;
     ariaLabelledby: string;
@@ -88,9 +87,9 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
     ngOnDestroy(): void;
     // (undocumented)
     ngOnInit(): void;
-    _onAnimationDone(event: AnimationEvent_2): void;
+    protected _onAnimationDone(state: string): void;
     // (undocumented)
-    _onAnimationStart(event: AnimationEvent_2): void;
+    protected _onAnimationStart(state: string): void;
     overlapTrigger: boolean;
     overlayPanelClass: string | string[];
     _panelAnimationState: 'void' | 'enter';
@@ -101,11 +100,11 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
     // @deprecated
     removeItem(_item: MatMenuItem): void;
     resetActiveItem(): void;
-    _resetAnimation(): void;
     // @deprecated (undocumented)
     setElevation(_depth: number): void;
+    // (undocumented)
+    _setIsOpen(isOpen: boolean): void;
     setPositionClasses(posX?: MenuPositionX, posY?: MenuPositionY): void;
-    _startAnimation(): void;
     templateRef: TemplateRef<any>;
     get xPosition(): MenuPositionX;
     set xPosition(value: MenuPositionX);
@@ -117,10 +116,10 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
     static ɵfac: i0.ɵɵFactoryDeclaration<MatMenu, never>;
 }
 
-// @public
+// @public @deprecated
 export const matMenuAnimations: {
-    readonly transformMenu: AnimationTriggerMetadata;
-    readonly fadeInItems: AnimationTriggerMetadata;
+    readonly transformMenu: any;
+    readonly fadeInItems: any;
 };
 
 // @public
@@ -287,7 +286,7 @@ export type MenuPositionX = 'before' | 'after';
 export type MenuPositionY = 'above' | 'below';
 
 // @public @deprecated (undocumented)
-export const transformMenu: AnimationTriggerMetadata;
+export const transformMenu: any;
 
 // (No @packageDocumentation comment for this package)
 

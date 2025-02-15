@@ -7,7 +7,6 @@
  */
 
 import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
-import {Platform} from '@angular/cdk/platform';
 import {
   AfterViewInit,
   ANIMATION_MODULE_TYPE,
@@ -21,6 +20,7 @@ import {
   numberAttribute,
   OnDestroy,
   OnInit,
+  Renderer2,
 } from '@angular/core';
 import {_StructuralStylesLoader, MatRippleLoader, ThemePalette} from '@angular/material/core';
 import {_CdkPrivateStyleLoader} from '@angular/cdk/private';
@@ -90,7 +90,6 @@ const HOST_SELECTOR_MDC_CLASS_PAIR: {attribute: string; mdcClasses: string[]}[] 
 @Directive()
 export class MatButtonBase implements AfterViewInit, OnDestroy {
   _elementRef = inject(ElementRef);
-  _platform = inject(Platform);
   _ngZone = inject(NgZone);
   _animationMode = inject(ANIMATION_MODULE_TYPE, {optional: true});
 
@@ -107,10 +106,10 @@ export class MatButtonBase implements AfterViewInit, OnDestroy {
 
   /**
    * Theme color of the button. This API is supported in M2 themes only, it has
-   * no effect in M3 themes.
+   * no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/button/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/theming#using-component-color-variants.
+   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   @Input() color?: string | null;
 
@@ -242,6 +241,9 @@ export const MAT_ANCHOR_HOST = {
  */
 @Directive()
 export class MatAnchorBase extends MatButtonBase implements OnInit, OnDestroy {
+  private _renderer = inject(Renderer2);
+  private _cleanupClick: () => void;
+
   @Input({
     transform: (value: unknown) => {
       return value == null ? undefined : numberAttribute(value);
@@ -251,13 +253,17 @@ export class MatAnchorBase extends MatButtonBase implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this._ngZone.runOutsideAngular(() => {
-      this._elementRef.nativeElement.addEventListener('click', this._haltDisabledEvents);
+      this._cleanupClick = this._renderer.listen(
+        this._elementRef.nativeElement,
+        'click',
+        this._haltDisabledEvents,
+      );
     });
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._elementRef.nativeElement.removeEventListener('click', this._haltDisabledEvents);
+    this._cleanupClick?.();
   }
 
   _haltDisabledEvents = (event: Event): void => {

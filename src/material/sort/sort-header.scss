@@ -33,7 +33,6 @@
 }
 
 .mat-sort-header-content {
-  text-align: center;
   display: flex;
   align-items: center;
 }
@@ -79,6 +78,8 @@
     @include token-utils.create-token-slot(color, arrow-color);
   }
 
+  .mat-sort-header.cdk-keyboard-focused &,
+  .mat-sort-header.cdk-program-focused &,
   .mat-sort-header:hover & {
     opacity: 0.54;
   }

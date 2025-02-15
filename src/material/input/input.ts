@@ -117,9 +117,6 @@ export class MatInput
   /** `aria-describedby` IDs assigned by the form field. */
   private _formFieldDescribedBy: string[] | undefined;
 
-  /** `aria-describedby` IDs assigned by the form field. */
-  private _formFieldDescribedBy: string[] | undefined;
-
   /** Whether the component is being rendered on the server. */
   readonly _isServer: boolean;
 
